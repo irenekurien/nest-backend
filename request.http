@@ -1,0 +1,44 @@
+### Create a new user
+POST  http://localhost:3000/auth/signup
+content-type: application/json
+
+{
+    "name": "test3",
+    "email": "test3@test.com",
+    "password": "12345"
+}
+
+
+### Sign in a new user
+POST  http://localhost:3000/auth/signin
+content-type: application/json
+
+{
+    "email": "admin@test.com",
+    "password": "12345"
+}
+
+
+### Get logged in user
+GET  http://localhost:3000/auth/me
+
+### Signout
+POST  http://localhost:3000/auth/signout
+
+
+### Create new agreement
+POST  http://localhost:3000/agreements/new
+content-type: application/json
+
+{
+    "user1Name": "test3",
+    "user1Email": "test3@test.com",
+    "user2Name": "test3",
+    "user2Email": "test3@test.com"
+}
+
+### Get all agreements
+GET  http://localhost:3000/agreements
+
+### Get one agreements
+GET  http://localhost:3000/agreements/1
