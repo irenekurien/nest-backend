@@ -1,14 +1,11 @@
-import { 
-    Body, 
-    Controller, 
-    Delete, 
-    Get, 
-    Param, 
-    Patch, 
-    Post, 
-    Query,
-    Session,
-    UseGuards,
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Res,
+  UseGuards,
 } from '@nestjs/common';
 import { CurrentUser } from 'src/users/decorators/current-user.decorator';
 import { User } from 'src/users/user.entity';
@@ -22,25 +19,30 @@ import { AgreementsDto } from './dtos/agreement.dto';
 @Controller('agreements')
 @Serialize(AgreementsDto)
 export class AgreementsController {
-    constructor(
-        private agreementsService: AgreementsService,
-    ) {}
-    
-    @Get('')
-    @UseGuards(AuthGuard)
-    getAllAgreements(@CurrentUser() user: User)  {
-        return this.agreementsService.findAll(user);
-    }
+  constructor(private agreementsService: AgreementsService) {}
 
-    @Post('/new')
-    @UseGuards(AdminGuard)
-    createAgreement(@Body() body: CreateAgreementDto)    {
-        return this.agreementsService.create(body);
-    }
+  @Get('')
+  @UseGuards(AuthGuard)
+  async getAllAgreements(@CurrentUser() user: User) {
+    return await this.agreementsService.findAll(user);
+  }
 
-    @Get('/:id')
-    @UseGuards(AuthGuard)
-    getAgreement(@Param('id') id: string)  {
-        return this.agreementsService.findOne(parseInt(id));
-    }
+  @Post('/new')
+  @UseGuards(AdminGuard)
+  @UseGuards(AuthGuard)
+  async createAgreement(@Body() body: CreateAgreementDto, @Res() res: any) {
+    const agreement = await this.agreementsService.create(body);
+    return res.status(200).json(agreement);
+  }
+
+  @Get('/:id')
+  @UseGuards(AuthGuard)
+  getAgreement(@Param('id') id: string) {
+    return this.agreementsService.findOne(parseInt(id));
+  }
+
+  @Post('/webhook')
+  handleWebhook(@Body() payload: any) {
+    this.agreementsService.handleWebhooks(payload)
+  }
 }

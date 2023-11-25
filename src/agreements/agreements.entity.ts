@@ -1,20 +1,32 @@
-import { User } from '../users/user.entity';
-import { Entity, Column,PrimaryGeneratedColumn, ManyToOne } from 'typeorm'
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  OneToMany,
+  OneToOne,
+  JoinColumn,
+} from 'typeorm';
+import { Recipient } from './recipients.entity';
+import { Document } from '../documents/document.entity';
 
 @Entity()
 export class Agreement {
-    @PrimaryGeneratedColumn()
-    id: number;
+  @PrimaryGeneratedColumn()
+  id: number;
 
-    @ManyToOne(() => User, user => user.agreementsUser1)
-    user1: User;
-  
-    @ManyToOne(() => User, user => user.agreementsUser2)
-    user2: User;
-  
-    @Column({ default: false })
-    signedByUser1: boolean;
-  
-    @Column({ default: false })
-    signedByUser2: boolean;
+  @OneToMany(() => Recipient, (recipient) => recipient.agreement)
+  recipient: Recipient[];
+
+  @OneToOne(() => Document, (document) => document.agreement, {
+    nullable: true,
+    cascade: true,
+  })
+  @JoinColumn()
+  document: Document;
+
+  @Column()
+  requestId: number;
+
+  @Column()
+  docId: number;
 }

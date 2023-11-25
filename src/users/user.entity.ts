@@ -1,26 +1,25 @@
-import { Agreement } from '../agreements/agreements.entity';
-import { Entity, Column,PrimaryGeneratedColumn, OneToMany } from 'typeorm'
+import { Recipient } from 'src/agreements/recipients.entity';
+import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
 
 @Entity()
 export class User {
-    @PrimaryGeneratedColumn()
-    id: number;
+  @PrimaryGeneratedColumn()
+  id: number;
 
-    @Column()
-    name: string;
+  @Column()
+  name: string;
 
-    @Column()
-    email: string;
+  @Column()
+  email: string;
 
-    @Column()
-    password: string;
+  @Column()
+  password: string;
 
-    @Column({ default: false})
-    isAdmin: boolean;
+  @Column({ default: false })
+  isAdmin: boolean;
 
-    @OneToMany(() => Agreement, agreement => agreement.user1)
-    agreementsUser1: Agreement[];
-  
-    @OneToMany(() => Agreement, agreement => agreement.user2)
-    agreementsUser2: Agreement[];
+  @OneToMany(() => Recipient, (recipient) => recipient.user, {
+    cascade: true,
+  })
+  recipients: Recipient[];
 }

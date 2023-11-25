@@ -1,16 +1,16 @@
 ### Create a new user
-POST  http://localhost:3000/auth/signup
+POST  http://localhost:5000/auth/signup
 content-type: application/json
 
 {
-    "name": "test3",
-    "email": "test3@test.com",
+    "name": "test1",
+    "email": "test1@test.com",
     "password": "12345"
 }
 
 
 ### Sign in a new user
-POST  http://localhost:3000/auth/signin
+POST  http://localhost:5000/auth/signin
 content-type: application/json
 
 {
@@ -20,25 +20,50 @@ content-type: application/json
 
 
 ### Get logged in user
-GET  http://localhost:3000/auth/me
+GET  http://localhost:5000/auth/me
 
 ### Signout
-POST  http://localhost:3000/auth/signout
+POST  http://localhost:5000/auth/signout
 
+
+### Delete user
+DELETE  http://localhost:5000/auth/1
 
 ### Create new agreement
-POST  http://localhost:3000/agreements/new
+POST  http://localhost:5000/agreements/new
 content-type: application/json
 
 {
-    "user1Name": "test3",
-    "user1Email": "test3@test.com",
-    "user2Name": "test3",
-    "user2Email": "test3@test.com"
+    "user1Name": "test1",
+    "user1Email": "test1@test.com",
+    "user2Name": "test2",
+    "user2Email": "test2@test.com"
+}
+
+### Sign a new agreement
+POST  http://localhost:5000/agreements/sign
+content-type: application/json
+
+{
+    "requestId": "52363000000028735"
 }
 
 ### Get all agreements
-GET  http://localhost:3000/agreements
+GET  http://localhost:5000/agreements
 
 ### Get one agreements
-GET  http://localhost:3000/agreements/1
+GET  http://localhost:5000/agreements/1
+
+### Upload pdf
+POST http://localhost:5000/documents/upload
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="pdf"; filename="your_file.pdf"
+Content-Type: application/pdf
+
+< ./mo.pdf
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+### Get one agreements
+POST  http://localhost:5000/agreements/webhook

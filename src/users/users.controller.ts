@@ -7,6 +7,7 @@ import {
     Patch, 
     Post, 
     Query,
+    Req, Res,
     Session,
     UseGuards,
 } from '@nestjs/common';
@@ -28,29 +29,28 @@ export class UsersController {
         private authServive: AuthService
     ) {}
 
-    @Post('/signup')
-    async createUser (@Body() body: CreateUserDto, @Session() session: any) {
-        const user = await this.authServive.signup(body.name, body.email, body.password);
-        session.userId = user.id;
+    @Get('/me')
+    @UseGuards(AuthGuard)
+    async getCurrentUser(@CurrentUser() user: User) {
         return user;
     }
 
+    @Post('/signup')
+    async createUser (@Body() body: CreateUserDto, @Req() req: any, @Res() res: any) {
+        const data = await this.authServive.signup(body.name, body.email, body.password);
+        res.status(200).json(data);
+    }
+
     @Post('/signin')
-    async signin (@Body() body: SignInUserDto, @Session() session: any) {
-        const user = await this.authServive.signin(body.email, body.password);
-        session.userId = user.id;
-        return user;
+    async signin (@Body() body: SignInUserDto, @Req() req: any, @Res() res: any) {
+        const data = await this.authServive.signin(body.email, body.password);
+        res.status(200).json(data);
     }
 
     @Post('/signout')
     async signout (@Session() session: any) {
         session.userId = null;
-    }
-
-    @Get('/me')
-    @UseGuards(AuthGuard)
-    getCurrentUser(@CurrentUser() user: User) {
-        return user;
+        return;
     }
 
     @Get('/:id')

@@ -1,5 +1,6 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable, BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { UsersService } from './users.service';
+import { JwtService } from '@nestjs/jwt';
 import { randomBytes, scrypt as _scrypt } from 'crypto';
 import { promisify } from 'util';
 
@@ -7,7 +8,10 @@ const scrypt = promisify(_scrypt);
 
 @Injectable()
 export class AuthService {
-    constructor(private usersService: UsersService) {}
+    constructor(
+        private usersService: UsersService,     
+        private jwtService: JwtService
+    ) {}
 
     async signup(name: string, email: string, password: string)    {
         const user = await this.usersService.find(email);
@@ -20,13 +24,17 @@ export class AuthService {
         const result = salt + '.' + hash.toString('hex');
         const newUser = await this.usersService.create(name, email, result);
 
-        return newUser;
+        const payload = { sub: newUser.id, email: email };
+        return {
+            userId: newUser.id,
+            accessToken: await this.jwtService.signAsync(payload),
+        };
     }
 
     async signin(email: string, password: string)    {
         const [user] = await this.usersService.find(email);
         if(!user)   {
-            throw new NotFoundException('User not found');
+            throw new UnauthorizedException(user, email);
         }
 
         const [salt, storedHash] = user.password.split('.');
@@ -36,6 +44,10 @@ export class AuthService {
             throw new BadRequestException('Incorrect Password');
         } 
 
-        return user;
+        const payload = { sub: user.id, email: user.email };
+        return {
+            userId: user.id,
+            accessToken: await this.jwtService.signAsync(payload),
+        };
     }
 }
