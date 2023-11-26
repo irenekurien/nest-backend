@@ -1,15 +1,18 @@
 import axios from 'axios';
 import { Injectable } from '@nestjs/common';
 import { UserDto } from 'src/users/dtos/user.dto';
+import { writeFile } from 'fs/promises';
+
 const fs = require('fs');
 const FormData = require('form-data');
 
 @Injectable()
 export class ZohoSignService {
   private readonly zohoApiUrl = 'https://sign.zoho.in/api/v1/requests';
-  private readonly zohoWebhookUrl = 'https://sign.zoho.in/api/v1/accounts/webhooks';
+  private readonly zohoWebhookUrl =
+    'https://sign.zoho.in/api/v1/accounts/webhooks';
   private readonly oauthToken =
-    '1000.3afa1f8f7abb1f3f2b063cbcceced190.2042475720ca99ac169994d8585da437';
+    '1000.f3f6869c50579b333c451f6785bf2dce.105b390408d10eb1732d0d9bba9e5b3f';
 
   async createZohoSignRequest(
     filePath: string,
@@ -44,7 +47,11 @@ export class ZohoSignService {
     }
   }
 
-  async sendZohoSignRequest(requestId: number): Promise<any> {
+  async sendZohoSignRequest(
+    requestId: number,
+    user1: UserDto,
+    user2: UserDto,
+  ): Promise<any> {
     const formData = new FormData();
 
     const requestData = {
@@ -75,14 +82,16 @@ export class ZohoSignService {
         response.data.requests.actions[1].action_id,
       );
 
-      return { link1: res1.sign_url, link2: res2.sign_url };
+      if (user1.email === response.data.requests.actions[0].recipient_email)
+        return { link1: res1.sign_url, link2: res2.sign_url };
+      else return { link1: res2.sign_url, link2: res1.sign_url };
     } catch (error) {
       console.error(error);
     }
   }
 
   async getEmbedLink(requestId: number, actionId: string): Promise<any> {
-    const url = `${this.zohoApiUrl}/${requestId}/actions/${actionId}/embedtoken?host=https://0fa9-2001-df5-d380-448b-64f2-3587-6bb6-c721.ngrok.io`;
+    const url = `${this.zohoApiUrl}/${requestId}/actions/${actionId}/embedtoken?host=https://b12f-2001-df5-d380-448b-64f2-3587-6bb6-c721.ngrok.io`;
 
     const headers = {
       'Content-Type': 'application/json',
@@ -103,14 +112,21 @@ export class ZohoSignService {
 
     const headers = {
       Authorization: `Zoho-oauthtoken ${this.oauthToken}`,
+      Accept: 'application/pdf',
+      responseType: 'arrayBuffer',
     };
 
     try {
-      const response = await axios.get(url, { headers });
-      console.log('Zoho Sign Completion Certificate Response:', response.data);
-      return response.data;
+      const response = await axios.get(url, {
+        headers,
+        responseType: 'arraybuffer',
+      });
+
+      await writeFile('src/pdfs/certificate.pdf', Buffer.from(response.data));
+
+      console.log('Certificate saved successfully.');
     } catch (error) {
-      console.error(error);
+      console.error('Error fetching or saving certificate:', error);
     }
   }
 

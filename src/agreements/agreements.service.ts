@@ -4,12 +4,12 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Not, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { CreateAgreementDto } from './dtos/create-agreement.dto';
 import { User } from 'src/users/user.entity';
 import { Agreement } from './agreements.entity';
 import { UsersService } from 'src/users/users.service';
-import { DocumentsService } from 'src/documents/documents.service';
+import { DocumentsService } from 'src/agreements/documents.service';
 import { ZohoSignService } from './zoho.service';
 import { RecipientsService } from './recipients.service';
 import { Recipient } from './recipients.entity';
@@ -42,27 +42,38 @@ export class AgreementsService {
 
     try {
       const response = await this.zohoSignService.createZohoSignRequest(
-        '/Users/irene/Documents/Code/nest/backend/test.pdf',
+        'src/pdfs/new.pdf',
         user1,
         user2,
       );
 
       const { link1, link2 } = await this.zohoSignService.sendZohoSignRequest(
         response.requests.request_id,
+        user1,
+        user2,
       );
 
       const agreement = await this.repo.create({
-        docId: 0,
         requestId: response.requests.request_id,
-        document: null,
       });
 
       await this.repo.save(agreement);
 
-      await this.recipientService.create(user1, agreement, link1);
-      await this.recipientService.create(user2, agreement, link2);
+      const recipient1 = await this.recipientService.create({
+        user: user1,
+        agreement1: agreement,
+        signLink: link1,
+      });
+      const recipient2 = await this.recipientService.create({
+        user: user2,
+        agreement2: agreement,
+        signLink: link2,
+      });
 
-      return agreement;
+      agreement.recipient1 = recipient1;
+      agreement.recipient2 = recipient2;
+
+      return await this.repo.save(agreement);
     } catch (e) {
       console.error(e);
     }
@@ -76,35 +87,27 @@ export class AgreementsService {
 
     if (user.isAdmin) {
       return await this.repo.find({
-        relations: ['recipient', 'recipient.user'],
+        relations: [
+          'recipient1',
+          'recipient1.user',
+          'recipient2',
+          'recipient2.user',
+        ],
       });
     }
 
-    const agreements = await this.repo.find({
-      where: { recipient: { user: { id } } },
-      relations: ['recipient', 'recipient.user'],
+    return await this.repo.find({
+      where: [
+        { recipient1: { user: { id } } },
+        { recipient2: { user: { id } } },
+      ],
+      relations: [
+        'recipient1',
+        'recipient1.user',
+        'recipient2',
+        'recipient2.user',
+      ],
     });
-
-    const formattedAgreements = await Promise.all(
-      agreements.map(async (agreement) => {
-        const otherRecipient = await this.recipientRepo.find({
-          where: { agreement: { id: agreement.id }, user: Not(id) },
-          relations: ['user'],
-          select: ['id', 'isSigned'],
-        });
-
-        const formattedRecipients = [...agreement.recipient, ...otherRecipient];
-
-        return {
-          id: agreement.id,
-          recipient: formattedRecipients,
-        };
-      }),
-    );
-
-    console.log(formattedAgreements);
-
-    return formattedAgreements;
   }
 
   async findOne(id: number) {
@@ -114,7 +117,12 @@ export class AgreementsService {
 
     const agreement = await this.repo.findOne({
       where: { id },
-      relations: ['recipient', 'recipient.user'],
+      relations: [
+        'recipient1',
+        'recipient1.user',
+        'recipient2',
+        'recipient2.user',
+      ],
     });
 
     if (!agreement) {
@@ -128,12 +136,45 @@ export class AgreementsService {
     return this.repo.findOne({ where: { requestId } });
   }
 
+  async remove(id: number) {
+    const agreement = await this.findOne(id);
+    console.log(agreement);
+    return this.repo.delete(agreement);
+  }
+
   async handleWebhooks(payload: any) {
+    console.log(payload);
+    const requestStatus = payload.requests.request_status;
     const requestId = payload.requests.request_id;
     const userEmail = payload.notifications.performed_by_email;
+
     const agreement = await this.repo.find(requestId);
     if (agreement) {
       await this.recipientService.updateByEmail(requestId, userEmail);
     }
+
+    if (requestStatus === 'completed' && userEmail === 'System Generated') {
+      await this.getSignedCertificate(requestId);
+    }
+  }
+
+  async getSignedCertificate(requestId) {
+    await this.zohoSignService.getCompletionCertificate(requestId);
+    await this.documentsService.uploadToFirebaseStorage(
+      'src/pdfs/certificate.pdf',
+      `${requestId}`,
+    );
+    const certLink = await this.documentsService.generateDownloadUrl(
+      `${requestId}`,
+    );
+
+    const [agreement] = await this.repo.find(requestId);
+    agreement.certificateLink = certLink;
+    this.repo.save(agreement);
+  }
+
+  async getLink(requestId) {
+    const [agreement] = await this.repo.find(requestId);
+    return agreement.certificateLink;
   }
 }

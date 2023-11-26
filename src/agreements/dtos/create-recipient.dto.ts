@@ -3,11 +3,7 @@ import { IsBoolean, IsNumber, IsString, ValidateNested } from 'class-validator';
 import { UserDto } from 'src/users/dtos/user.dto';
 import { AgreementsDto } from './agreement.dto';
 
-export class RecipientDto {
-  @Expose()
-  @IsNumber()
-  id: number;
-
+export class CreateRecipientDto {
   @Expose()
   @ValidateNested()
   @Type(() => UserDto)
@@ -16,16 +12,12 @@ export class RecipientDto {
   @Expose()
   @ValidateNested()
   @Type(() => AgreementsDto)
-  agreement1: AgreementsDto;
+  agreement1?: AgreementsDto;
 
   @Expose()
   @ValidateNested()
   @Type(() => AgreementsDto)
-  agreement2: AgreementsDto;
-
-  @Expose()
-  @IsBoolean()
-  isSigned: boolean;
+  agreement2?: AgreementsDto;
 
   @Expose()
   @IsString()

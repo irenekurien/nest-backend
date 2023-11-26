@@ -8,9 +8,18 @@ export class AgreementsDto {
     id: number;
 
     @Expose()
+    @IsNumber()
+    requestId: number;
+
+    @Expose()
     @ValidateNested()
     @Type(() => RecipientDto)
-    recipient: RecipientDto;
+    recipient1: RecipientDto;
+
+    @Expose()
+    @ValidateNested()
+    @Type(() => RecipientDto)
+    recipient2: RecipientDto;
 }
 
 

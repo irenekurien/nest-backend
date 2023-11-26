@@ -3,8 +3,8 @@ POST  http://localhost:5000/auth/signup
 content-type: application/json
 
 {
-    "name": "test1",
-    "email": "test1@test.com",
+    "name": "test2",
+    "email": "test2@test.com",
     "password": "12345"
 }
 
@@ -26,8 +26,8 @@ GET  http://localhost:5000/auth/me
 POST  http://localhost:5000/auth/signout
 
 
-### Delete user
-DELETE  http://localhost:5000/auth/1
+### Delete
+DELETE  http://localhost:5000/agreements/1
 
 ### Create new agreement
 POST  http://localhost:5000/agreements/new
@@ -66,4 +66,4 @@ Content-Type: application/pdf
 ------WebKitFormBoundary7MA4YWxkTrZu0gW--
 
 ### Get one agreements
-POST  http://localhost:5000/agreements/webhook
+GET  http://localhost:5000/agreements/download/52363000000034779

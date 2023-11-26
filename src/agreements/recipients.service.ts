@@ -2,8 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Recipient } from './recipients.entity';
-import { User } from 'src/users/user.entity';
-import { Agreement } from './agreements.entity';
+import { CreateRecipientDto } from './dtos/create-recipient.dto';
 
 @Injectable()
 export class RecipientsService {
@@ -11,9 +10,8 @@ export class RecipientsService {
     @InjectRepository(Recipient) private repo: Repository<Recipient>,
   ) {}
 
- async create(user: User, agreement: Agreement, signLink: string, isSigned = false) {
-    const recipient = this.repo.create({ user, agreement, isSigned, signLink });
-
+ async create(createRecipient: CreateRecipientDto) {
+    const recipient = this.repo.create(createRecipient);
     return this.repo.save(recipient);
   }
 
@@ -24,18 +22,21 @@ export class RecipientsService {
     return this.repo.findOneBy({ id });
   }
 
-  async findOneByAgreementId(agreementId: number): Promise<Recipient | undefined> {
-    return this.repo.findOne({ where: { agreement: { id: agreementId } } });
-  }
-
   async findOneByUserId(userId: number): Promise<Recipient | undefined> {
     return this.repo.findOne({ where: { user: { id: userId } } });
   }
 
-  async updateByEmail(reqId: number, email: string): Promise<void> {
-    const recipient = await this.repo.findOne({
-      where: { agreement: { requestId: reqId }, user: { email } },
+  async findByEmail(reqId: number, email: string): Promise<Recipient | undefined> {
+    return await this.repo.findOne({
+      where: [
+        { agreement1: { requestId: reqId }, user: { email } },
+        { agreement2: { requestId: reqId }, user: { email } },
+      ],
     });
+  }
+
+  async updateByEmail(reqId: number, email: string): Promise<void> {
+    const recipient = await this.findByEmail(reqId, email);
 
     if (recipient) {
       recipient.isSigned = true;

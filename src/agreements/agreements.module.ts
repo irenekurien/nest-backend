@@ -7,15 +7,14 @@ import { ZohoSignService } from './zoho.service';
 import { Agreement } from './agreements.entity';
 import { Recipient } from './recipients.entity';
 import { UsersModule } from 'src/users/users.module';
-import { DocumentsModule } from 'src/documents/documents.module';
+import { DocumentsService } from './documents.service';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Agreement, Recipient]),
     UsersModule,
-    DocumentsModule,
   ],
   controllers: [AgreementsController],
-  providers: [AgreementsService, RecipientsService, ZohoSignService],
+  providers: [AgreementsService, DocumentsService,RecipientsService, ZohoSignService],
 })
 export class AgreementsModule {}

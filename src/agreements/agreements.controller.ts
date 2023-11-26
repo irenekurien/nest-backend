@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Post,
@@ -44,5 +45,15 @@ export class AgreementsController {
   @Post('/webhook')
   handleWebhook(@Body() payload: any) {
     this.agreementsService.handleWebhooks(payload)
+  }
+
+  @Delete('/:id')
+  delete(@Param('id') id) {
+    this.agreementsService.remove(id)
+  }
+
+  @Get('/download/:id')
+  downloadAgreement(@Param('id') id) {
+    return this.agreementsService.getLink(id)
   }
 }

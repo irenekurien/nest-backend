@@ -1,4 +1,11 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  ManyToOne,
+  JoinColumn,
+  OneToOne,
+} from 'typeorm';
 import { User } from 'src/users/user.entity';
 import { Agreement } from './agreements.entity';
 
@@ -11,13 +18,17 @@ export class Recipient {
   @JoinColumn({ name: 'userId' })
   user: User;
 
-  @ManyToOne(() => Agreement, agreement => agreement.recipient)
-  @JoinColumn({ name: 'agreementId' })
-  agreement: Agreement;
+  @OneToOne(() => Agreement, (agreement) => agreement.recipient1)
+  @JoinColumn()
+  agreement1: Agreement;
 
-  @Column()
+  @OneToOne(() => Agreement, (agreement) => agreement.recipient2)
+  @JoinColumn()
+  agreement2: Agreement;
+
+  @Column({ default: false })
   isSigned: boolean;
 
-  @Column()
+  @Column({ nullable: true })
   signLink: string;
 }
